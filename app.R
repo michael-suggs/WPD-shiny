@@ -66,7 +66,16 @@ ui <- fluidPage(
 server <- function(input, output) {
   data_indexer <- seq(input$year - 2009, dim(data)[1], 9)
 
-  output$text <- renderText()
+  output$text <- renderText({
+    switch(
+      input$adjustments,
+      "None" = "No adjustments made.",
+      "Percent of Total Population" = "Displays arrest counts divided by population.",
+      "Percent of Total Arrests" = "Displays arrest counts for the selected population divided by total arrests.",
+      "SIR/MIR" = "Represents as a ratio of observed arrests over expected arrests.",
+      "Poisson Regression" = ""
+      )
+  })
 
   output$map <- renderPlot({
     if (input$adjustments == "None") {
@@ -159,16 +168,8 @@ server <- function(input, output) {
       )
     }
   })
-
-  output$distPlot <- renderPlot({
-    # generate bins based on input$bins from ui.R
-    x <- faithful[, 2]
-    bins <- seq(min(x), max(x), length.out = input$bins + 1)
-
-    # draw the histogram with the specified number of bins
-    hist(x, breaks = bins, col = "darkgray", border = "white")
-  })
 }
 
 # Run the application
 shinyApp(ui = ui, server = server)
+# runGitHub("WPD-shiny", "michael-suggs")
