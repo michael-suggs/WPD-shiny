@@ -14,7 +14,7 @@ library(fillmap)
 
 data <- read.csv("data/wpd_arrests_2010-2018_clean.csv")
 effects <- read.csv("data/fixedeffects.csv")[,-1]
-NHtracts <- read.csv("data/tl_2016_37_129_tract.shp")
+NHtracts <- read_sf("data/tl_2016_37_129_tract.shp")
 
 # Define UI for application that draws a histogram
 ui <- fluidPage(
@@ -29,30 +29,31 @@ ui <- fluidPage(
         "Year",
         min = 2010,
         max = 2018,
-        value = 2010
+        value = 2010,
+        sep="",
+        animate=animationOptions(interval=500, loop=T)
+      ),
+      radioButtons(
+        "data",
+        "Data",
+        c(
+          "Total Arrests",
+          "Black Only Arrests",
+          "White Only Arrests"
+        )
+      ),
+      radioButtons(
+        "adjustments",
+        "Adjustments",
+        c(
+          "None",
+          "Percent of Total Population",
+          "Percent of Total Arrests",
+          "SIR/MIR",
+          "Poisson Regression"
+        )
       )
     ),
-    radioButtons(
-      "data",
-      "Data",
-      c(
-        "Total Arrests",
-        "Black Only Arrests",
-        "White Only Arrests"
-      )
-    ),
-    radioButtons(
-      "adjustments",
-      "Adjustments",
-      c(
-        "None",
-        "Percent of Total Population",
-        "Percent of Total Arrests",
-        "SIR/MIR",
-        "Poisson Regression"
-      )
-    ),
-
     # Show a plot of the generated distribution
     mainPanel(
       textOutput("text"),
@@ -64,8 +65,6 @@ ui <- fluidPage(
 
 # Define server logic required to draw a histogram
 server <- function(input, output) {
-  data_indexer <- seq(input$year - 2009, dim(data)[1], 9)
-
   output$text <- renderText({
     switch(
       input$adjustments,
@@ -78,6 +77,8 @@ server <- function(input, output) {
   })
 
   output$map <- renderPlot({
+    data_indexer <- seq(input$year - 2009, dim(data)[1], 9)
+
     if (input$adjustments == "None") {
       switch(input$data,
         "Total Arrests" = {
