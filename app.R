@@ -13,7 +13,7 @@ library(viridis)
 library(fillmap)
 
 data <- read.csv("data/wpd_arrests_2010-2018_clean.csv")
-effects <- read.csv("data/fixedeffects.csv")[,-1]
+fixed_effects <- read.csv("data/fixedeffects.csv")[, -1]
 NHtracts <- st_geometry(read_sf("data/tl_2016_37_129_tract.shp"))
 
 # Define UI for application that draws a histogram
@@ -30,8 +30,8 @@ ui <- fluidPage(
         min = 2010,
         max = 2018,
         value = 2010,
-        sep="",
-        animate=animationOptions(interval=500, loop=T)
+        sep = "",
+        animate = animationOptions(interval = 500, loop = T)
       ),
       radioButtons(
         "data",
@@ -66,14 +66,13 @@ ui <- fluidPage(
 # Define server logic required to draw a histogram
 server <- function(input, output) {
   output$text <- renderText({
-    switch(
-      input$adjustments,
+    switch(input$adjustments,
       "None" = "No adjustments made.",
       "Percent of Total Population" = "Displays arrest counts divided by population.",
       "Percent of Total Arrests" = "Displays arrest counts for the selected population divided by total arrests.",
       "SIR/MIR" = "Represents as a ratio of observed arrests over expected arrests.",
       "Poisson Regression" = ""
-      )
+    )
   })
 
   output$map <- renderPlot({
@@ -159,16 +158,28 @@ server <- function(input, output) {
     )
   })
 
-  output$table <- renderTable({
-    if (input$adjustments == "Poisson Regression") {
-      switch(
-        input$data,
-        "Total Arrests" = {
+  output$table <- renderTable(
+    {
+      if (input$adjustments == "Poisson Regression") {
+        cols <- c("Mean", "95% CI Lower", "95% CI Upper")
+        rows <- c("% Black", "% Poverty", "% High School or Less", "% Male", "% Secondary Homes", "% Aged 18-24")
 
-        }
-      )
-    }
-  })
+        matr <- switch(input$data,
+          "Total Arrests" = exp(fixed_effects[1:7, ]),
+          "Black Only Arrests" = exp(fixed_effects[15:21, ]),
+          "White Only Arrests" = exp(fixed_effects[8:14, ]),
+        )
+
+        colnames(matr) <- cols
+        rownames(matr) <- rows
+        matr
+      }
+    },
+    rownames = T,
+    colnames = T,
+    digits = 3,
+    width = "100%"
+  )
 }
 
 # Run the application
