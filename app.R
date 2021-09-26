@@ -14,7 +14,7 @@ library(fillmap)
 
 data <- read.csv("data/wpd_arrests_2010-2018_clean.csv")
 effects <- read.csv("data/fixedeffects.csv")[,-1]
-NHtracts <- read_sf("data/tl_2016_37_129_tract.shp")
+NHtracts <- st_geometry(read_sf("data/tl_2016_37_129_tract.shp"))
 
 # Define UI for application that draws a histogram
 ui <- fluidPage(
